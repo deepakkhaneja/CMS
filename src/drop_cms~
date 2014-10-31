@@ -1,0 +1,9 @@
+drop table StudentCourse;
+drop table CourseTeacher;
+drop table Teacher;
+drop table DegID;
+drop table CourseDeg;
+drop table Course;
+drop table Student;
+drop database cms;
+

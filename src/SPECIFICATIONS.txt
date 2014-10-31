@@ -1,0 +1,205 @@
+																	Course Management Software(CMS) :
+
+Data Storage : done by database using jdbc driver for mysql 
+
+To run, first execute
+export CLASSPATH=$CLASSPATH:/usr/share/java/mysql-connector-java.jar
+
+to use mysql-connector-java using jdbc driver for mysql
+
+
+Following assumptions are made about the IIT Course management :
+
+1. Four Departments : A, B, C, D
+2. Two Degrees : B_TECH = 1, DUAL = 2
+3. Two Semesters : Autumn = 1, Spring = 2
+
+
+Rules for using IDs :
+
+0. DeanID : "D",  password : "D"
+
+1. CourseID : Semester(1/2) + Deptt.(A/B/C/D) + CourseNumber(serial number)
+	ex- 6th course in autumn sem in deptt A has courseID : 1A6
+
+2. StudentID or Roll Number : Year(12,13...) + Deptt.(A/B/C/D) + Degree(1/2) + serial number
+	password(default) : "student"(can be changed)
+	ex- Roll Number/ StudentID of 7th student registered in 2012 in deptt A in B.Tech is 12A17
+	ex- Roll Number/ StudentID of 4th student registered in 2013 in deptt C in Dual is 13C24
+	
+3. Faculty Advisor(FacAdID) : "F" + Deptt.(A/B/C/D) + Batch Year(1/2/3/4/5)
+	password(default) : "facad"(can be changed)
+	ex- 4th year in deptt C has faculty advisor FC4
+	 
+4. TeacherID(Non-Faculty Advisor) : "T" + Deptt.(A/B/C/D) + serial number
+	password(default) : "teacher"(can be changed)
+	ex-9th Non-Faculty Advisor teacher in deptt D is TD9
+	 	
+5. DegID : Year(1/2/3/4/5) + Deptt(A/B/C/D) + Degree(1/2)
+	ex-DegID of 3rd year, deptt A, degree B.Tech is 3A1
+	ex-DegID of 1st year, deptt D, degree B.Tech is 1D1
+   Importance : Each DegID has same CORE courses and same ELECTIVE courses offered, set by the Dean as the first Operation in each semester 	
+	
+
+Initial semester : Autumn 2012
+Note : 
+1. Semester changes to Spring 2013, then to Autumn 2013 and so on
+2. Random data is provided for courses(modifiable), students(optional and modifiable), teachers, and faculty advisors
+
+
+SEQUENCE OF OPERATIONS :
+
+1. First, Dean enters the course details
+   UserID : "D"
+   Password : "D"
+   By default, 35 courses are assumed for each semester
+   --Course Details like name, LTPC can be changed
+   --For every course, there are 40 course status to be set for the 40 DegIDs
+     course status can be CORE(C) or, ELECTIVE(E) or, NONE(N) set by the Dean as the first Operation in each semester
+   --Dean also enters the number of electives to be done by each DegID
+   
+2. Initial Registration in the IIT(Only for Autumn semester)
+   Student enters details like name, registration number, address, password, deptt, degree
+   A Roll number/StudentID is generated for the student as per the rules described above
+    
+	
+3. Semester registration
+   UserID : Roll Number(also called StudentID) 
+   Password : "student"(by default else the one set at the time of initial registration)
+   
+   Displayed a set of his/her CORE courses and ELECTIVE courses as set by the the Dean
+   Allowed to choose number of Electives to be done, this number was set by the Dean
+   
+4. Grade entry by the teacher
+   UserID : TeacherID or, FacAdID(described above)
+   Password : "teacher" or, "facad"
+   
+   Each teacher(Faculty Advisor(FacAd) or, Non-FacAd) teaches one or, zero courses
+   List of Students under teacher's course is displayed, grades can be set for each student
+		Note: Every time the teacher changes grade, result for each student affected is updated
+			  Default grade = A
+			  
+5. Display of Result
+   Asks for Roll Number and displays the most updated result including CGPA, SGPA, Total credits, Semester credits, Course Details and grades for current semester
+   CGPA < 6 : Warning message printed
+   CGPA >= 9 : Congratulatory message printed
+ 
+6. Next Semester : Dean enters the Course Details, course status for each DegID and number of electives to be done for each DegID
+
+   Semester Tailoring by Faculty Advisor
+   UserID : FacAdID(described above)
+   Password : "facad"
+   
+   Each Faculty Advisor has a batch of students, ex- FA1 has batch of first year deptt A students
+   Displays the results and number of electives to be done for his/her batch students 
+   The faculty adviser can reduce the number of electives of weak students (only for those having CGPA less then 7) on a case by case basis.
+
+7. Then again follow from step 2.
+
+
+Assumed Data :
+40 Non-FacAd teachers are assumed, 10 for each deptt(A/B/C/D)
+20 FacAds are assumed, one for each year(1/2/3/4/5) in deptt(A/B/C/D)
+70 courses, 35 for each semester(further 9 each for deptt A,B,C and 8 for deptt C)
+However, course details like name, LTPC, couurse status for each DegID is modifiable, and number of electives for each DegID is modifiable only by the Dean
+
+--> Random Student Generation for Testing purpose : 
+		Random students MUST be generated before registering any student manually
+		Selecting this option generates 60 students(15 for each deptt, further 10 for B.Tech and 5 for Dual) for the current semester(iff Autumn Smester)
+		i.e. does their initial registration(iff Autumn Smester),
+		and does semester registration for all randomly students till then, for the current semester
+
+TABLES used in database "cms": 
+mysql> show tables;
++---------------+
+| Tables_in_cms |
++---------------+
+| Course        |
+| CourseDeg     |
+| CourseTeacher |
+| DegID         |
+| Student       |
+| StudentCourse |
+| Teacher       |
++---------------+
+7 rows in set (0.00 sec)
+
+mysql> describe Student; //Table name : Student
++-----------------+-------------+------+-----+---------+-------+
+| Field           | Type        | Null | Key | Default | Extra |
++-----------------+-------------+------+-----+---------+-------+
+| studentID       | varchar(10) | NO   | PRI | NULL    |       |
+| password        | varchar(15) | YES  |     | NULL    |       |
+| regno           | int(11)     | YES  |     | NULL    |       |
+| address         | varchar(40) | YES  |     | NULL    |       |
+| name            | varchar(20) | YES  |     | NULL    |       |
+| cgpa            | float       | YES  |     | NULL    |       |
+| sgpa            | float       | YES  |     | NULL    |       |
+| totalCredits    | smallint(6) | YES  |     | NULL    |       |
+| semesterCredits | smallint(6) | YES  |     | NULL    |       |
+| elective        | smallint(6) | YES  |     | NULL    |       |
++-----------------+-------------+------+-----+---------+-------+
+10 rows in set (0.00 sec)
+
+mysql> describe Teacher; //Table name : Teacher
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| teacherID | varchar(10) | NO   | PRI | NULL    |       |
+| password  | varchar(15) | YES  |     | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> describe Course; //Table name : Course
++----------+-------------+------+-----+---------+-------+
+| Field    | Type        | Null | Key | Default | Extra |
++----------+-------------+------+-----+---------+-------+
+| courseID | varchar(10) | NO   | PRI | NULL    |       |
+| name     | varchar(40) | YES  |     | NULL    |       |
+| ltpc     | smallint(6) | YES  |     | NULL    |       |
++----------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> describe StudentCourse; //Table name : StudentCourse
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| studentID | varchar(10) | NO   | PRI | NULL    |       |
+| courseID  | varchar(10) | NO   | PRI | NULL    |       |
+| grade     | varchar(2)  | YES  |     | NULL    |       |
+| subtype   | smallint(6) | YES  |     | NULL    |       |
+| semID     | varchar(10) | NO   | PRI | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+
+mysql> describe CourseTeacher; //Table name : CourseTeacher
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| courseID  | varchar(10) | NO   | PRI | NULL    |       |
+| teacherID | varchar(10) | NO   | PRI | NULL    |       |
+| semID     | varchar(10) | NO   | PRI | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> describe CourseDeg; //Table name : CourseDeg
++----------+-------------+------+-----+---------+-------+
+| Field    | Type        | Null | Key | Default | Extra |
++----------+-------------+------+-----+---------+-------+
+| courseID | varchar(10) | NO   | PRI | NULL    |       |
+| degID    | varchar(10) | NO   | PRI | NULL    |       |
+| subtype  | smallint(6) | YES  |     | NULL    |       |
+| semID    | varchar(10) | NO   | PRI | NULL    |       |
++----------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> describe DegID; //Table name : DegID
++----------+-------------+------+-----+---------+-------+
+| Field    | Type        | Null | Key | Default | Extra |
++----------+-------------+------+-----+---------+-------+
+| degID    | varchar(10) | NO   | PRI | NULL    |       |
+| elective | smallint(6) | YES  |     | NULL    |       |
+| semID    | varchar(10) | NO   | PRI | NULL    |       |
++----------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+

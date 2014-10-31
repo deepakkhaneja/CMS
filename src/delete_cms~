@@ -1,0 +1,7 @@
+delete from Teacher;
+delete from StudentCourse;
+delete from DegID;
+delete from CourseDeg;
+delete from Course;
+delete from CourseTeacher;
+delete from Student;
